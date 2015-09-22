@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Firefox Web Audio Lag</title>
+        <script type="text/javascript">
+            sound = null; // Arraybuffer of click track, loaded from XHR
+            context = null; // Web Audio API Context
+            bufSource = null; // BufferSourceNode
+            lastClick = 0; // AudioContext time, so seconds
+            clickTime = 2; // Seconds
+            startTime = 0; // When the sound began to play
+            playing = false;
+            
+            background = 0; // toggle between bg colours for visuals
+            
+            window.onload = function() {
+                context = new window.AudioContext();
+                
+                var req = new XMLHttpRequest();
+                req.open('GET', "./30bpm.ogg", true);
+                req.responseType = 'arraybuffer';
+                req.onload = function() {
+                    sound = req.response;
+                    playSound();
+                };
+                req.onerror = function() {
+                    alert("Could not load test sound");
+                };
+                req.send();
+                
+                // Start animation loop for visualising timing issues
+                anim();
+            };
+            
+            anim = function() {
+                window.requestAnimationFrame(anim);
+                if(playing) {
+                    // This will catch up if required
+                    while(context.currentTime - lastClick > clickTime) {
+                        if(background) {
+                            document.body.style.background = "white";
+                        } else {
+                            document.body.style.background = "black";
+                        }
+                        console.log("click");
+                        lastClick += clickTime;
+                        background = !background;
+                    }
+                }
+            }
+            
+            playSound = function() {
+                if(bufSource) {
+                    bufSource.stop();
+                    playing = false;
+                }
+                // When decoded, sound is no longer usable, so we duplicate
+                tmp = sound.slice(0);
+                // The bug is only visible with freshly decoded data
+                context.decodeAudioData(sound, function(buffer) {
+                    bufSource = context.createBufferSource();
+                    bufSource.buffer = buffer;
+                    bufSource.loop = true;
+                    bufSource.connect(context.destination);
+
+                    bufSource.start(0);
+                    /* Key to this bug: startTime does not
+                       necessarily correspond to when the sound
+                       starts to play, especially on slow systems */
+                    startTime = context.currentTime;
+                    // Putting it backwards in time so our first click works
+                    lastClick = startTime - clickTime;
+                    playing = true; // make the animation continue
+                    
+                    // Restore sound data for next decode
+                    sound = tmp;
+                });
+            }
+        </script>
+    </head>
+    <body>
+         <button onclick="playSound()">Decode again</button> 
+    </body>
+</html>
