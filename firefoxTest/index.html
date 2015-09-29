@@ -59,8 +59,18 @@
                 tmp = sound.slice(0);
                 // The bug is only visible with freshly decoded data
                 context.decodeAudioData(sound, function(buffer) {
+                    /* NEW by duplicating the buffer several times,
+                        we hopefully thrash about in memory a bit to
+                        get the bug to more readily appear. */
+                    var bigBuf = this.context.createBuffer(1, buffer.length * 10, buffer.sampleRate);
+                    var shortBufData = buffer.getChannelData(0);
+                    var bigBufData = bigBuf.getChannelData(0);
+                    for(var i = 0; i < bigBuf.length; i++) {
+                        bigBufData[i] = shortBufData[i % buffer.length];
+                    }
+                    
                     bufSource = context.createBufferSource();
-                    bufSource.buffer = buffer;
+                    bufSource.buffer = bigBuf;
                     bufSource.loop = true;
                     bufSource.connect(context.destination);
 
