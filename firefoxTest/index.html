@@ -50,7 +50,7 @@
                 }
             }
             
-            playSound = function() {
+            playSound = function(suspendResume) {
                 if(bufSource) {
                     bufSource.stop();
                     playing = false;
@@ -59,7 +59,7 @@
                 tmp = sound.slice(0);
                 // The bug is only visible with freshly decoded data
                 context.decodeAudioData(sound, function(buffer) {
-                    /* NEW by duplicating the buffer several times,
+                    /* By duplicating the buffer several times,
                         we hopefully thrash about in memory a bit to
                         get the bug to more readily appear. */
                     var bigBuf = this.context.createBuffer(1, buffer.length * 10, buffer.sampleRate);
@@ -74,14 +74,26 @@
                     bufSource.loop = true;
                     bufSource.connect(context.destination);
 
-                    bufSource.start(0);
-                    /* Key to this bug: startTime does not
-                       necessarily correspond to when the sound
-                       starts to play, especially on slow systems */
-                    startTime = context.currentTime;
-                    // Putting it backwards in time so our first click works
-                    lastClick = startTime - clickTime;
-                    playing = true; // make the animation continue
+                    /* NEW by suspending the context, calling start()
+                       and then resuming the context, the issue is avoided */
+                    if(suspendResume) {
+                        context.suspend().then(function() {
+                            bufSource.start(0);
+                            startTime = context.currentTime;
+                            lastClick = startTime - clickTime;
+                            context.resume();
+                            playing = true;
+                        });
+                    } else {
+                        bufSource.start(0);
+                        /* Key to this bug: startTime does not
+                           necessarily correspond to when the sound
+                           starts to play, especially on slow systems */
+                        startTime = context.currentTime;
+                        // Putting it backwards in time so our first click works
+                        lastClick = startTime - clickTime;
+                        playing = true; // make the animation continue
+                    }
                     
                     // Restore sound data for next decode
                     sound = tmp;
@@ -90,6 +102,7 @@
         </script>
     </head>
     <body>
-         <button onclick="playSound()">Decode again</button> 
+         <button onclick="playSound()">Decode again</button>
+         <button onclick="playSound(true)">Decode again with suspend/resume</button>
     </body>
 </html>
