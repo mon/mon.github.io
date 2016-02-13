@@ -14,7 +14,7 @@
     <script type="text/javascript">
         window.addEventListener("load", function() {
             var req = new XMLHttpRequest();
-            req.open('GET', "test.opus", true);
+            req.open('GET', "test.ogg", true);
             req.responseType = 'arraybuffer';
             req.onload = function() {
                 var asset = AV.Asset.fromBuffer(req.response);
@@ -27,11 +27,12 @@
                     console.log(buffer);
                     console.log("Decode complete");
                 });
-                console.log("Queued decode");
+                console.log("Queuing decode");
             };
             req.onerror = () => {
                 console.log("Couldn't load test ogg");
             };
+            console.log("Sending request");
             req.send();
         });
     </script>
