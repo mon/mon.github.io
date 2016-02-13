@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Aurora Test</title>
+  </head>
+  <body>
+    <h1>Check your console</h1>
+    <script src="aurora.js"></script>
+    <script src="mp3.js"></script>
+    <script src="ogg.js"></script>
+    <script src="vorbis.js"></script>
+    <script src="opus.js"></script>
+    <script type="text/javascript">
+        window.addEventListener("load", function() {
+            var req = new XMLHttpRequest();
+            req.open('GET', "test.opus", true);
+            req.responseType = 'arraybuffer';
+            req.onload = function() {
+                var asset = AV.Asset.fromBuffer(req.response);
+                
+                asset.on("error", function(error) {
+                    console.log(error);
+                });
+                
+                asset.decodeToBuffer(function(buffer) {
+                    console.log(buffer);
+                    console.log("Decode complete");
+                });
+                console.log("Queued decode");
+            };
+            req.onerror = () => {
+                console.log("Couldn't load test ogg");
+            };
+            req.send();
+        });
+    </script>
+  </body>
+</html>
