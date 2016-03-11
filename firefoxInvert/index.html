@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Firefox Disappearing Elements</title>
+        <style>
+        body,html {
+            position: relative;
+            height: 100%;
+            margin: 0;
+            background-color: #AAA;
+        }
+
+        #gone {
+            filter: invert(100%);
+        }
+        
+        #inner {
+            position: absolute;
+            bottom: 0;
+        }
+        </style>
+    </head>
+    <body>
+         <div id="gone">
+            <div id="inner">
+                Hello, world
+            </div>
+         </div>
+    </body>
+</html>
